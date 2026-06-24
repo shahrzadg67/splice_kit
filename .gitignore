@@ -1,0 +1,8 @@
+# Raw count matrix — 165 MB, regenerate app/data/ with app/prep_data.R
+samples_exons_counts.tab
+
+# R session cruft
+.Rhistory
+.RData
+.Rproj.user/
+rsconnect/
