@@ -104,6 +104,11 @@ plot_gene_model <- function(gene, long, measure, groups, model, ylab) {
       marker = list(color = "#444"), showlegend = FALSE,
       customdata = can$exon_num,
       hovertemplate = paste0("exon %{customdata}<extra></extra>"))
+    # always-visible exon numbers above each canonical exon
+    p <- add_trace(p, type = "scatter", mode = "text",
+      x = (can$start + can$end)/2, y = rep(exon_floor + exon_h + 0.12, nrow(can)),
+      text = can$exon_num, textfont = list(size = 9, color = "#333"),
+      hoverinfo = "skip", showlegend = FALSE)
     # intron line spanning the gene
     p <- add_trace(p, type = "scatter", mode = "lines",
       x = c(model$gene_start, model$gene_end), y = c(intron_y, intron_y),
