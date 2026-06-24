@@ -6,6 +6,8 @@ suppressPackageStartupMessages({
   library(plotly)
 })
 
+source("gene_model.R")  # Ensembl exon mapping + gene-model/sashimi track
+
 DATA_DIR <- file.path("data")
 
 exons       <- readRDS(file.path(DATA_DIR, "exons.rds"))      # keyed data.table on gene_name

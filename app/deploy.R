@@ -27,7 +27,7 @@ if (is.na(app_dir) || !nzchar(app_dir)) app_dir <- "."
 deployApp(
   appDir   = app_dir,
   appName  = "brain-exon-usage",
-  appFiles = c("global.R", "ui.R", "server.R",
+  appFiles = c("global.R", "ui.R", "server.R", "gene_model.R",
                "data/exons.rds", "data/sample_meta.csv", "data/gene_index.csv"),
   forceUpdate = TRUE
 )

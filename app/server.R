@@ -8,7 +8,7 @@ function(input, output, session) {
   geneData <- reactive({
     req(input$gene)
     d <- get_gene(input$gene)
-    validate(need(!is.null(d), "Gene not found."))
+    shiny::validate(shiny::need(!is.null(d), "Gene not found."))
     d
   })
 
@@ -76,6 +76,28 @@ function(input, output, session) {
            legend = list(orientation = "h"))
   })
 
+  # ---- Tab: exon map / gene model (live Ensembl) ----
+  geneModel <- reactive({
+    req(input$gene)
+    withProgress(message = "Fetching Ensembl gene model...", value = 0.5,
+                 get_gene_model(input$gene))
+  })
+
+  output$model <- renderPlotly({
+    d <- selData(); req(nrow(d) > 0)
+    plot_gene_model(input$gene, d, measure(), input$groups, geneModel(), ylab())
+  })
+
+  output$map_tbl <- renderTable({
+    d <- geneData()
+    m <- geneModel()
+    bins <- unique(d[, .(exon_idx, exon_label, chr, feature_start, feature_stop, length, feature_id)])
+    bins <- if (!is.null(m)) map_bins_to_exons(bins, m) else { bins[, exon_map := "n/a"]; bins }
+    setorder(bins, exon_idx)
+    bins[, .(`bin` = exon_label, `chr` = chr, `start` = feature_start, `stop` = feature_stop,
+             `bp` = length, `maps to` = exon_map)]
+  }, striped = TRUE, spacing = "xs", width = "100%")
+
   # ---- Tab 2: heatmap (exon x sample) ----
   output$heatmap <- renderPlotly({
     d <- selData(); m <- measure()
@@ -128,9 +150,15 @@ function(input, output, session) {
   output$dl_csv <- downloadHandler(
     filename = function() paste0(input$gene, "_exon_usage.csv"),
     content = function(file) {
-      d <- selData()[, .(gene = input$gene, exon = exon_label, feature_id, chr, strand,
-                         feature_start, feature_stop, length, SRR, group, count, rel, cpm)]
-      fwrite(d, file)
+      d <- selData()
+      m <- geneModel()
+      if (!is.null(m)) {
+        mp <- map_bins_to_exons(unique(d[, .(exon_idx, feature_start, feature_stop)]), m)
+        d <- mp[, .(exon_idx, exon_map)][d, on = "exon_idx"]
+      } else d[, exon_map := NA_character_]
+      out <- d[, .(gene = input$gene, exon = exon_label, maps_to = exon_map, feature_id, chr, strand,
+                   feature_start, feature_stop, length, SRR, group, count, rel, cpm)]
+      fwrite(out, file)
     }
   )
 }
